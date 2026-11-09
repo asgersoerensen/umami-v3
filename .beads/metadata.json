@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "umami_v3",
+  "project_id": "7b41e053-3685-4c93-9507-623837cf3a21"
+}
