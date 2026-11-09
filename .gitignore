@@ -5,3 +5,10 @@
 .beads-credential-key
 .beads/proxieddb/
 *.gate.lock*
+
+# Local env / Paradev per-workspace state
+.env
+.env.*
+!.env.example
+.superset/ports.env
+.superset/config.local.json
