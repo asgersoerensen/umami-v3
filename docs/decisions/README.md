@@ -32,3 +32,4 @@ background only and loses every conflict.
 | [0017](0017-telemetry-and-privacy.md) | Sentry EU + first-party anonymous counts; legal check before release | Accepted |
 | [0018](0018-defaults-for-spec-gaps.md) | Defaults for behaviour the spec leaves open (V1–V19) | Accepted |
 | [0019](0019-ai-assistant-stretch.md) | Stretch (post-v1): AI assistant that builds the week and list by chat, through the same actions | Proposed |
+| [0020](0020-design-sources-penpot-and-prototype.md) | Penpot owns visual design and tokens; the HTML prototype owns behaviour; spec wins | Accepted |
