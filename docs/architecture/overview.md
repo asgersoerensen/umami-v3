@@ -418,7 +418,7 @@ human confirms it.
   US and has no EU region, so it fails ADR 0009. Sign Brevo's DPA and review its
   subprocessor list. *This amends ADR 0009.*
 - **Source and CI: GitHub + GitHub Actions** (decided 12 Nov 2026). Remote:
-  `github.com/asgersoerensen/umamo-v3` (added 12 Nov 2026; nothing pushed
+  `github.com/asgersoerensen/umami-v3` (added 12 Nov 2026; nothing pushed
   yet). Workflows:
   - **on every PR:** TypeScript checks + `packages/core` tests, Django tests
     (against a Postgres service container with `pg_trgm`), both suites run
