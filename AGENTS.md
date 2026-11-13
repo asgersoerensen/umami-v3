@@ -125,3 +125,10 @@ bd prime                # Refresh Beads context
 
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/core-concepts/sync-concepts.md for details and anti-patterns.
 <!-- END BEADS CODEX SETUP -->
+
+## Conventions & Patterns
+
+- Be concise when coding. No clever solutions or overengineering.
+- Explicit is better than implicit. Write code that is easy to read and understand.
+- Add comments, but keep them short. They should only give the missing context.
+- Use variable names that are easy to understand.

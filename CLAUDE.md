@@ -74,4 +74,7 @@ _Add a brief overview of your project architecture_
 
 ## Conventions & Patterns
 
-_Add your project-specific conventions here_
+- Be concise when coding. No clever solutions or overengineering.
+- Explicit is better than implicit. Write code that is easy to read and understand.
+- Add comments, but keep them short. They should only give the missing context.
+- Use variable names that are easy to understand.
