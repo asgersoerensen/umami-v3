@@ -204,6 +204,10 @@ tray.
 - Tap anywhere else on the card → Recipe Sheet (§3).
 - Tray dots fill left to right. Target is 5; the tray accepts **1–7**. Dots
   beyond 5 render as extra filled dots.
+- **Last had.** A recipe that appears in the history carries a small badge
+  on its hero image, `pick.lastHad` ("Sidst: 3 uger siden"), from the newest
+  archived week containing it. The badge sits over the image, so it changes no
+  card height (no-reflow). Recipes in the current week show ✓ instead.
 - `Byg sedlen` is enabled from **1** meal, not 4. Never hold the user hostage to
   a target. Label stays `Byg sedlen` at any count.
 - `⚡ Overrask mig` fills to 5 with recipes matching the currently active filters,
@@ -300,6 +304,8 @@ Half-height modal, drag to full. Reached from any card in Opskrifter (or the swa
   (`ImportTile`) in the same footprint.
 - `Tilføj til denne uge` is disabled at 7 meals; tapping it shows
   `pick.maxToast`.
+- The meta line ends with `recipe.lastHad` ("Sidst på jeres uge 12. okt.")
+  when the recipe is in the history (§4).
 
 **States:** loading = skeleton at same layout. Error fetching detail = sheet
 shows title/meta from the card plus "Kunne ikke hente hele opskriften." +
@@ -341,6 +347,12 @@ Tab 1. The review-and-adjust surface.
 - `Ryd ugen` opens a confirm dialog (`week.clear.*`). It clears meals, item
   states, the list and hand-added items; it keeps household servings,
   personal staples and imported recipes (ADR 0004).
+- **History (decided 13 Nov 2026).** Before clearing, `Ryd ugen` archives the
+  week: its meals with servings and the list as it stood (rows, amounts,
+  states, hand-added items), stamped with the date. No cap: every cleared week
+  is kept. An empty week archives nothing. Browsing the archive (a screen
+  under ⚙) is later (§10); in v1 it is used only for "last had" (§2, §3) and
+  is there for the assistant (ADR 0019).
 - `Log ud` and `Slet konto` each confirm first (`auth.signOut.*`,
   `auth.delete.*`; ADR 0006).
 
@@ -855,6 +867,21 @@ had no match.
 | `quantity_overrides` | map | `{ item_key → { qty, unit, base_amount } }`. Set by `Ret mængde`. `base_amount` is the recipe-derived amount (base unit) when the override was set; on rebuild the override applies only if it still matches, else it is deleted (V22). |
 | `personal_staples` | set | Ingredient ids the household has marked `Basisvare`. Per household, not per week: survives `Ryd ugen`. Local while anonymous; synced like `household_servings` when signed in, last-write-wins per id. |
 
+### Week archive (decided 13 Nov 2026)
+
+| Field | Type | Notes |
+|---|---|---|
+| `id`, `user_id` | | One row per `Ryd ugen` of a non-empty week. `user_id` null while anonymous. **No cap.** |
+| `cleared_at` | ts | The date shown as "last had". |
+| `household_servings` | int | At the time of clearing. |
+| `entries[]` | | `{ recipe_id, title, servings }`. `title` is a snapshot so the row still reads if an import is later deleted. |
+| `list[]` | | The list as it stood: `{ item_key?, text, qty?, unit?, aisle, state }`, hand-added items included. |
+
+Append-only and immutable: sync is a union by `id`, never a conflict. Local
+while anonymous, uploaded at first sign-in, included in data export, deleted
+with the account, wiped from the phone at `Log ud`. `last_had(recipe_id)` is
+the newest `cleared_at` whose `entries` contain it.
+
 ---
 
 ## 10. Not in v1
@@ -862,6 +889,8 @@ had no match.
 Cut deliberately, all real, none needed for the first convincing loop:
 
 - **Day-of-week assignment** and calendar view
+- **Browsing the week archive** (old weeks and lists under ⚙, re-use an old
+  week). v1 records the archive and shows "last had" only (§4).
 - **Pantry inventory** — "what's in my cupboard"
 - **Household sharing** — two parents on one week
 - **Nutrition** — calories, macros, allergen flags
@@ -917,6 +946,8 @@ for the curated set (ADR 0016) are tracked as milestones, not spec questions.
 - **Unknown ingredient at `Gem`** (13 Nov 2026) — kept as a local ingredient
   under `ANDET` (or the proposed aisle), not dropped; only explicitly skipped
   lines are dropped (§7c, ADR 0003).
+- **Meal history** (13 Nov 2026) — `Ryd ugen` archives the week and its list,
+  no cap; recipes show when they were last on the week (§2, §3, §4, §9).
 
 1. **Per-line confidence** (was Q1) — yes; the v2 contract is adopted verbatim,
    plus `is_range` / `quantity_high` (ADR 0011).
@@ -1018,7 +1049,7 @@ the mobile epic accepts now. Glosses are for the team, not for the app.
 | `week.settings.signOut` | Log ud | Sign out |
 | `week.settings.delete` | Slet konto | Delete account |
 | `week.clear.title` | Ryd ugen? | Clear the week? |
-| `week.clear.body` | Måltider og flueben forsvinder. Jeres importerede opskrifter bliver. | Meals and checks go. Your imports stay. |
+| `week.clear.body` | Ugen og sedlen gemmes i jeres historik. Jeres importerede opskrifter bliver. | The week and list are saved to your history. Your imports stay. |
 | `week.clear.confirm` | Ryd | Clear |
 | `week.error` | Kunne ikke gemme din uge. | Couldn't sync your week. |
 | `week.offlineChip` | Offline — ændringer er gemt på telefonen | Offline — changes saved on this phone |
@@ -1043,12 +1074,14 @@ the mobile epic accepts now. Glosses are for the team, not for the app.
 | `pick.offline` | Du er offline. Viser dine gemte opskrifter. | You're offline. Showing your saved recipes. |
 | `pick.importOffline` | Import kræver forbindelse. | Import needs a connection. |
 | `pick.maxToast` | Syv er hele ugen — fjern én først. | Seven is the whole week — remove one first. |
+| `pick.lastHad` | Sidst: {relative} | Last: {relative} — `{relative}` = `i denne uge`, `i sidste uge`, `{n} uger siden`, `{n} mdr. siden` |
 | `pick.surpriseShort` | Der var kun {n} retter, der passede til filtrene. | Only {n} recipes matched your filters. |
 | `recipe.ingredients` | Ingredienser | Ingredients |
 | `recipe.method` | Fremgangsmåde | Method |
 | `recipe.serves` | til {p} personer | serves {p} |
 | `recipe.source` | Fra {domain} | From {domain} |
 | `recipe.methodLink` | Se den på {domain} ↗ | See it on {domain} (shown after `recipe.method` as "Fremgangsmåde · Se den på {domain} ↗") |
+| `recipe.lastHad` | Sidst på jeres uge {date} | Last on your week {date} — `{date}` as `12. okt.`; year added if not this year |
 | `recipe.add` | ＋ Tilføj til denne uge | Add to this week |
 | `recipe.remove` | ✓ Fjern | Remove |
 | `recipe.error` | Kunne ikke hente hele opskriften. | Couldn't load the full recipe. |

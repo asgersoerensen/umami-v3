@@ -1,14 +1,14 @@
 # 0019 — Stretch: an AI assistant that builds the week and the list by chat
 
-- **Status:** Proposed · 13 Nov 2026 (owner asked for it as a stretch feature
-  after approving UI draft 4 as v1)
+- **Status:** Accepted (as a stretch, not v1) · 13 Nov 2026. Proposed the
+  same day when the owner asked for it after approving UI draft 4 as v1.
 - **Revised 13 Nov 2026:** the assistant reads the household profile through
   tools so the user never repeats themselves (owner request). Adds a
   household profile with food preferences (§6a).
 - **Revised 13 Nov 2026 (owner answers):** prototype runs on the Anthropic API
   directly, EU endpoint before public launch; 10 free turns without an
-  account; "always" preferences apply in Opskrifter too. Remaining open:
-  proposal-card shape and meal history (below).
+  account; "always" preferences apply in Opskrifter too; one line per change in
+  proposals; history from the week archive. No open questions.
 - **Scope:** **Not part of v1.** Own milestone (M5) after the iOS release. Ships
   behind a server-side feature flag; v1 must not wait for it or depend on it.
 
@@ -37,9 +37,12 @@ imported recipes. Generating new recipes, and importing a URL from chat, are
 out of scope (separate later decision: generated recipes raise quality and
 liability questions the curated slate avoids).
 
-**3. Proposals, not silent edits.** Each turn that changes something returns a
-**proposal card** (for example "5 retter · til 4, torsdag til 6" with the five
-cards) and `Tilføj til ugen` / `Ikke de her`. Applying runs the normal actions
+**3. Proposals, not silent edits.** Each turn that changes something returns
+**one proposal card with one line per change** (owner, 13 Nov 2026). Each
+proposed recipe is its own line with its own yes / no; servings changes are
+lines too. All non-recipe changes (list items, staples, skips) come last as
+**one chunk** with a single yes / no. `Tilføj` applies the lines left on;
+`Ikke de her` drops the whole card. Applying runs the normal actions
 and shows the usual `Fortryd` toast. Week-changing proposals follow the stale
 rules (V9): if anything on the list is already ticked, the list is not rebuilt
 behind the user's back.
@@ -75,6 +78,7 @@ Read tools (server-side, scoped to the signed-in account, nothing else):
 | `get_week` | meals in the current week with servings |
 | `get_list` | list rows: name, amount, state (to_buy / bought / skipped) |
 | `get_my_recipes` | the user's imported recipes (titles, ids, tags) |
+| `get_history` | archived weeks from `Ryd ugen` (date, recipes, servings), newest first; `last_had` per recipe (spec §9 Week archive) |
 | `search_recipes` | curated + own recipes by text, filters, time, cost, cuisine, excluding avoided ingredients |
 
 The system prompt tells the model to call `get_household` and
@@ -153,17 +157,10 @@ legal check (ADR 0017, bead `15a.3`) is extended to cover it.
 ## Open questions
 
 1. ~~Privacy route~~ — decided: (b) for the prototype, (a) before public launch.
-2. **Proposal-card shape.** A request like "fem retter til næste uge, og sæt
-   bleer på" changes the week *and* the list. One card with both (one
-   `Tilføj`, one undo), or two cards the user accepts separately?
-   Recommendation: one card per user request, with its parts listed, each
-   removable before `Tilføj`.
+2. ~~Proposal-card shape~~ — decided: one line per recipe with its own yes /
+   no; other changes as one chunk at the end (§3).
 3. ~~Opskrifter applies the profile~~ — decided: `Altid` applies, `Helst` is
    offered (§6a).
-4. **Meal history.** The app has no calendar week, but it has a natural time
-   anchor: the **shopping trip**. Recommendation: when the user finishes
-   (`Så er der købt ind`), or runs `Ryd ugen` without a finished trip, record a
-   *trip* `{date, recipe ids, servings}`; keep the last 8. A
-   `get_recent_meals` tool answers "ikke det samme som sidst", and the record
-   is synced, exported and deleted like the week. Needs owner confirmation.
+4. ~~Meal history~~ — decided: `Ryd ugen` archives the week and its list, no
+   cap (ADR 0004 amended, spec §9). Read through `get_history`.
 5. ~~Anonymous taste~~ — decided: 10 turns per device.

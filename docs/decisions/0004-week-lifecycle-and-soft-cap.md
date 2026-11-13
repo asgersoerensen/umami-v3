@@ -1,6 +1,10 @@
 # 0004 — One open-ended week, `Ryd ugen`, soft cap 7
 
 - **Status:** Accepted · 12 Nov 2026
+- **Amended 13 Nov 2026 (owner):** `Ryd ugen` archives the week and its list
+  before clearing (spec §4, §9 Week archive). No cap. v1 uses it only to show
+  when a recipe was last on the week; browsing the archive is later. This is
+  also the meal history the assistant reads (ADR 0019).
 - **Gap resolved:** the spec has "one active week per user" but no rollover,
   no definition of `Ryd ugen`, and a soft cap of 6 with no stated rationale that
   is only enforced in the picker.

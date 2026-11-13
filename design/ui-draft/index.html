@@ -89,7 +89,8 @@ select.preset{font:600 13px var(--sys);padding:8px 10px;border-radius:10px;borde
 .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .card{position:relative;margin:0 20px 14px;border-radius:18px;background:var(--surface);border:1.5px solid var(--line2);box-shadow:0 6px 16px rgba(23,19,14,.05);overflow:hidden;cursor:pointer;height:calc(150px + 74px*var(--fs))}
 .card.sel{border:2px solid var(--accent);box-shadow:0 6px 16px rgba(194,74,27,.14)}
-.card .hero{height:150px}
+.card .hero{height:150px;position:relative}
+.lasthad{position:absolute;left:10px;bottom:10px;background:rgba(23,19,14,.72);color:#fff;font-size:13px;font-weight:600;padding:3px 8px;border-radius:999px;white-space:nowrap}
 .card.sel .hero{height:148px}
 .card .cb{padding:12px 62px 12px 14px}
 .card .ct{font-size:calc(18px*var(--fs));font-weight:600;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -385,7 +386,7 @@ let S;
 function fresh(){return{screen:"onb",onb:0,tab:"list",modal:null,sheet:null,dialog:null,store:false,storeDoneOpen:false,finished:false,
  household:4,week:[],filters:new Set(),cuisines:new Set(),list:null,states:{},extras:[],staplesOpen:false,pop:null,toast:null,
  signedIn:false,shopsDone:0,promptPending:false,promptDismissed:false,swap:null,offline:false,swiped:null,homeHas:new Set(),edits:{},
- imp:null,importedSaved:false,importsToday:0}}
+ imp:null,importedSaved:false,importsToday:0,archive:[]}}
 S=fresh();
 
 /* ---------------- helpers ---------------- */
@@ -459,7 +460,7 @@ const A={
  household(d){S.household=Math.min(12,Math.max(1,S.household+d));render()},
  settings(){S.sheet={type:"settings"};render()},
  clearAsk(){S.dialog={type:"clear"};render()},
- clearWeek(){S.week=[];S.list=null;S.states={};S.extras=[];S.edits={};S.swiped=null;S.dialog=null; /* personal staples survive Ryd ugen */S.sheet=null;render()},
+ clearWeek(){archiveWeek();S.week=[];S.list=null;S.states={};S.extras=[];S.edits={};S.swiped=null;S.dialog=null; /* personal staples survive Ryd ugen */S.sheet=null;render()},
  rebuild(){buildList();render()},
  tapItem(key){if(S.swiped){S.swiped=null;render();return}const st=S.states[key];if(st==="skipped")return A.unskip(key);S.states[key]=st==="bought"?"to_buy":"bought";S.pop=null;render()},
   skipOnce(key){S.swiped=null;S.states[key]="skipped";const r=S.list.rows.find(r=>r.key===key);
@@ -585,11 +586,18 @@ function vOnb(){
    <p class="foot">${T["onb.3.foot"]}</p>
    <div class="dots"><i></i><i></i><i class="on"></i></div>${flag("V19: 4×2 grid instead of a 1–8 segmented row, so it fits at 320 pt / XL.")}</div>`;
 }
+/* week archive (spec §4/§9, 13 Nov): Ryd ugen archives the week + list, no cap */
+function archiveWeek(){if(!S.week.length)return;
+ S.archive.unshift({cleared_at:Date.now(),household:S.household,entries:S.week.map(w=>({slug:w.slug,title:(RBY[w.slug]||{}).title,servings:w.override||S.household})),
+  list:S.list?S.list.rows.map(r=>({key:r.key,text:r.item,state:S.states[r.key]})):[]})}
+function lastHad(slug){const a=S.archive.find(w=>w.entries.some(e=>e.slug===slug));return a?a.cleared_at:null}
+function relAgo(t){const d=(Date.now()-t)/864e5;if(d<14)return d<7?"i denne uge":"i sidste uge";if(d<62)return Math.floor(d/7)+" uger siden";return Math.floor(d/30.4)+" mdr. siden"}
+function fmtDay(t){const m=["jan.","feb.","mar.","apr.","maj","jun.","jul.","aug.","sep.","okt.","nov.","dec."];const d=new Date(t);return d.getDate()+". "+m[d.getMonth()]+(d.getFullYear()!==new Date().getFullYear()?" "+d.getFullYear():"")}
 function vPicker(asTab){
   const list=filtered();const n=S.week.length;
   const chips=[["time","Under 30 min"],["kids","Børnevenlig"],["cost","kr"],["veg","Vegetar"]].map(([k,l])=>`<button class="chip ${S.filters.has(k)?"on":""}" onclick="A.chip('${k}')">${l}</button>`).join("")+`<button class="chip ${S.cuisines.size?"on":""}" onclick="S.sheet={type:'more'};render()">⚙ Mere</button>`;
   const cards=list.length?list.map(r=>{const sel=inWeek(r.slug);const dis=!sel&&n>=7;
-    return `<div class="card ${sel?"sel":""}" onclick="A.openRecipe('${r.slug}')"><div class="hero">${hero(r)}</div>
+    return `<div class="card ${sel?"sel":""}" onclick="A.openRecipe('${r.slug}')"><div class="hero">${hero(r)}${!sel&&lastHad(r.slug)?`<span class="lasthad">Sidst: ${relAgo(lastHad(r.slug))}</span>`:""}</div>
     <div class="cb"><div class="ct">${esc(r.title)}</div><div class="meta">${metaRow(r)}</div></div>
     <button class="addt ${dis?"dis":""}" aria-label="${sel?"Fjern":"Tilføj"}" onclick="event.stopPropagation();A.toggle('${r.slug}')">${S.swap?"⇄":sel?"✓":"＋"}</button></div>`}).join("")
    :`<div class="empty"><h3>Ingen retter matcher alle filtrene.</h3><p>Prøv at fjerne ét filter.</p><button class="btn quiet" onclick="A.resetFilters()">Nulstil filtre</button></div>`;
@@ -703,7 +711,7 @@ function vImport(){
 function vSheet(){
   const sh=S.sheet;if(!sh)return"";let c="";
   if(sh.type==="recipe"){const r=RBY[sh.slug];const sel=inWeek(r.slug);const k=(S.household)/r.servings;
-   c=`<div class="sb2"><div class="sh-hero">${hero(r,80)}</div><h3>${esc(r.title)}</h3><div class="meta" style="white-space:normal;flex-wrap:wrap">${metaRow(r)}</div>
+   c=`<div class="sb2"><div class="sh-hero">${hero(r,80)}</div><h3>${esc(r.title)}</h3><div class="meta" style="white-space:normal;flex-wrap:wrap">${metaRow(r)}${lastHad(r.slug)?`<i></i>Sidst på jeres uge ${fmtDay(lastHad(r.slug))}`:""}</div>
     <div class="h-sub" style="margin-top:4px">${esc(r.cuisine[0].toUpperCase()+r.cuisine.slice(1))} · til ${S.household} personer</div>
     ${r.blurb?`<p style="color:var(--ink2);line-height:1.45;margin:12px 0 0">${esc(r.blurb)}</p>`:""}
     <div class="sec">Ingredienser</div>${r.lines.map(l=>{const ig=ing(l.item);const q=l.qty==null?null:(l.unit==="knivspids"?l.qty:l.qty*k);
@@ -757,7 +765,7 @@ function vSheet(){
   return `<div class="scrim" onclick="A.closeSheet()"></div><div class="sheet"><div class="handle"></div>${c}</div>`;
 }
 function vDialog(){const d=S.dialog;if(!d)return"";const m={
-  clear:["Ryd ugen?","Måltider og flueben forsvinder. Jeres importerede opskrifter bliver.","Ryd","A.clearWeek()"],
+  clear:["Ryd ugen?","Ugen og sedlen gemmes i jeres historik. Jeres importerede opskrifter bliver.","Ryd","A.clearWeek()"],
   signout:["Log ud?","Ugen og sedlen bliver slettet fra telefonen. De er gemt på din konto.","Log ud","A.signOut()"],
   delete:["Slet din konto?","Dine importerede opskrifter og din gemte uge bliver slettet. Det kan ikke fortrydes.","Slet konto","A.signOut()"]}[d.type];
   return `<div class="scrim" style="z-index:40" onclick="S.dialog=null;render()"></div><div class="dialog"><h4>${m[0]}</h4><p>${m[1]}</p><div class="row"><button class="btn quiet" onclick="S.dialog=null;render()">Annullér</button><button class="btn stop" onclick="${m[3]}">${m[2]}</button></div></div>`}
@@ -806,6 +814,7 @@ const PRESETS=[
  ["Import: tjek linjerne",()=>{S.screen="main";S.week=pickWeek(4);buildList();S.modal="import";S.imp={step:"review",lines:reviewLines()}}],
  ["Import: dagens grænse nået",()=>{S.screen="main";S.importsToday=5;S.tab="recipes";A.openImport()}],
  ["Liste med egne tilføjelser",()=>{S.screen="main";S.week=pickWeek(5);buildList();S.extras.push({text:"2 gulerødder",key:"gulerod",qty:2,unit:"stk",state:"to_buy"},{text:"bleer",state:"to_buy"});buildList(S.list.snap);S.tab="list"}],
+ ["Historik: sidst på ugen",()=>{S.screen="main";const w=pickWeek(7);const D=864e5;S.archive=[{cleared_at:Date.now()-8*D,household:4,entries:w.slice(0,3).map(x=>({slug:x.slug,servings:4})),list:[]},{cleared_at:Date.now()-40*D,household:4,entries:w.slice(3,6).map(x=>({slug:x.slug,servings:4})),list:[]}];S.tab="recipes"}],
  ["Efter første indkøb (log ind-tilbud)",()=>{S.screen="main";S.week=pickWeek(5);buildList();S.shopsDone=1;S.promptPending=true;S.tab="list"}],
 ];
 const sel=document.getElementById("preset");
