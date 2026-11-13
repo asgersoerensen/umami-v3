@@ -260,17 +260,19 @@ chip (D14).
 ### 3c · Save rules
 
 - `Gem og tilføj til denne uge` is **never disabled** (from v2).
-- **Unfixed lines are dropped, not saved broken.**
-  - The subtitle `rev.willSkip` states the consequence.
-  - A line is "fixed" once it has a canonical **or** local ingredient (D3). Lines
-    only ever exist with an ingredient; there are no free-text-only lines.
+- **Nothing is dropped silently.** Only lines the user skips (`Spring linjen
+  over`) are dropped; the subtitle `rev.willSkip` counts them.
+  - A line whose ingredient is still unknown at save becomes a **new local
+    ingredient** (parsed name, proposed aisle or `andet`, tag `NY VARE`) —
+    decided 13 Nov 2026, ADR 0003 amended. Lines only ever exist with an
+    ingredient; there are no free-text-only lines.
 - **The one true block is servings.** If servings is still unanswered, tapping
   either save button scrolls to that row and focuses the stepper, with no error
   shown.
 - **Not signed in** → the save completes on the phone (§3d). No sign-in step.
 - **Open flags don't block** (decided in rev 5): lines with an ingredient but an
-  open flag save with the parser's value; lines with no ingredient are dropped
-  (`rev.willSkip`).
+  open flag save with the parser's value; lines with no ingredient are kept as
+  new local ingredients (above).
 - **The soft cap of 7 (D4).** If the week already has 7 meals,
   `Gem og tilføj til denne uge` behaves as `Gem kun` and shows the toast
   "Opskriften er gemt. Syv er hele ugen — fjern én først."
@@ -631,8 +633,9 @@ the body above.
 7. **Range vs guess** — the line contract gains `is_range` and `quantity_high`;
    range lines still flag, with the reason "Opskriften siger {low}–{high} — vi
    tog {low}" (§3a; ADR 0011).
-8. **Skipped unresolved lines** — still dropped (v2 behaviour) until the parser
-   spike reports wrong-match numbers; revisit then.
+8. **Unresolved lines at save** — decided 13 Nov 2026: kept as new local
+   ingredients under `andet` (or the proposed aisle), not dropped. The parser
+   spike's wrong-match numbers may still tune *when* a line is flagged.
 9. **Relabel the primary button when the week is full** — deferred to the UX
    epic; the toast (§3c) stands meanwhile.
 10. **Landing after `Gem kun` from the share sheet** — the new recipe's Recipe

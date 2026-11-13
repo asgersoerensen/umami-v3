@@ -27,6 +27,11 @@
   canonical ingredient (adding an alias). Mapping rewrites the user's lines.
 - The ingredient FK on an ingredient line is **never null**: it points at a
   canonical ingredient **or** a local one.
+- **Amended 13 Nov 2026 (owner):** the user doesn't have to create it. A line
+  still unresolved when the import is saved becomes a local ingredient
+  automatically (parsed name, proposed aisle or `andet`, shown as `NY VARE`)
+  instead of being dropped. Only lines the user explicitly skips are dropped.
+  Before sign-in it lives on the phone (ADR 0006).
 
 ## Consequences
 

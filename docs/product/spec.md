@@ -688,8 +688,12 @@ The parser returns a per-line confidence. Low-confidence lines are hoisted into 
   header counts down `TJEK DISSE 1`. Progress is visible.
 - `Gem og tilføj til denne uge` is **never blocked** by open flags (decided in
   rev 5 after the draft review). Lines that have an ingredient but an open flag
-  (range, dropped unit, guessed amount) save with the parser's value; lines with
-  no ingredient are dropped, and the button subtitle reads "2 linjer springes
+  (range, dropped unit, guessed amount) save with the parser's value. A line
+  whose ingredient is still unknown is **kept as a new local ingredient** under
+  its parsed name, in the aisle the parser proposed or `ANDET`, marked `NY VARE`
+  (decided 13 Nov 2026; ADR 0003 amended): a missing ingredient on the list costs
+  more trust than an oddly sorted one. Only lines the user taps `Spring linjen
+  over` on are dropped, and the button subtitle counts those: "2 linjer springes
   over." Explicit consequence, no gate.
 - Ingredient-name autocomplete against the canonical ingredient table is what
   makes an imported recipe merge cleanly with curated ones — this is a hard
@@ -910,6 +914,9 @@ for the curated set (ADR 0016) are tracked as milestones, not spec questions.
 - **Picker tray at 320 pt / XL** (rev 5) — compact tray, dots hidden below
   340pt, capped type; never overflows (§2).
 - **Back to skipped after `Skal købes`** (rev 5) — swipe `Spring over` (§5).
+- **Unknown ingredient at `Gem`** (13 Nov 2026) — kept as a local ingredient
+  under `ANDET` (or the proposed aisle), not dropped; only explicitly skipped
+  lines are dropped (§7c, ADR 0003).
 
 1. **Per-line confidence** (was Q1) — yes; the v2 contract is adopted verbatim,
    plus `is_range` / `quantity_high` (ADR 0011).

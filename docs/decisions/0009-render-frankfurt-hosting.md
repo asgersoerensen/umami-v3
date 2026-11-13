@@ -2,6 +2,12 @@
 
 - **Status:** Accepted · 12 Nov 2026
 - **Amended 12 Nov 2026:** email provider fixed to Brevo (overview A7).
+- **Amended 13 Nov 2026:** scoped exception for the stretch AI assistant
+  (ADR 0019). Its chat text can contain personal data; during the prototype
+  and internal/family testing it is sent to the Anthropic API directly (DPA +
+  transfer basis). Before public launch the assistant moves to an EU-hosted
+  model endpoint and the "EU processors only" rule holds again. Recipe import
+  is unaffected: the LLM still never receives personal data there.
 - **Conflict resolved:** business plan (Vercel + Supabase) vs v2 (Fly.io,
   `iad` = US East). Gap: no data-residency decision for a Danish consumer app.
 

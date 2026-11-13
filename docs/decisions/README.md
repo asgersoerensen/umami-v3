@@ -21,7 +21,7 @@ background only and loses every conflict.
 | [0006](0006-anonymous-first-sign-in-at-save.md) | Anonymous-first; import and save without an account (amended 13 Nov); migration, sign-out, deletion | Accepted |
 | [0007](0007-procrastinate-task-queue.md) | Procrastinate (Postgres-backed) task queue | Accepted |
 | [0008](0008-expo-cross-platform-ios-first.md) | Expo, cross-platform code, iOS released first, no web | Accepted |
-| [0009](0009-render-frankfurt-hosting.md) | Render, Frankfurt; EU processors only | Accepted |
+| [0009](0009-render-frankfurt-hosting.md) | Render, Frankfurt; EU processors only (assistant prototype exception, 13 Nov) | Accepted |
 | [0010](0010-imported-recipe-content-storage.md) | Imports store facts, a link back and an image URL — no method text, no image copy | Accepted |
 | [0011](0011-import-line-contract.md) | Import line contract (v2 format, verbatim) | Accepted |
 | [0012](0012-input-adapters-one-contract.md) | One line contract, many input adapters | Accepted |
@@ -31,5 +31,5 @@ background only and loses every conflict.
 | [0016](0016-v2-as-prior-art.md) | umami-v2 is prior art; v3 is a fresh build | Accepted |
 | [0017](0017-telemetry-and-privacy.md) | Sentry EU + first-party anonymous counts; legal check before release | Accepted |
 | [0018](0018-defaults-for-spec-gaps.md) | Defaults for behaviour the spec leaves open (V1–V19) | Accepted |
-| [0019](0019-ai-assistant-stretch.md) | Stretch (post-v1): AI assistant that builds the week and list by chat, through the same actions | Proposed |
+| [0019](0019-ai-assistant-stretch.md) | Stretch (post-v1): AI assistant that builds the week and list by chat, through the same actions | Proposed (privacy route, anonymous taste, profile in Opskrifter decided 13 Nov) |
 | [0020](0020-design-sources-penpot-and-prototype.md) | Penpot owns visual design and tokens; the HTML prototype owns behaviour; spec wins | Accepted |

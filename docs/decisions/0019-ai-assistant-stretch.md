@@ -5,6 +5,10 @@
 - **Revised 13 Nov 2026:** the assistant reads the household profile through
   tools so the user never repeats themselves (owner request). Adds a
   household profile with food preferences (§6a).
+- **Revised 13 Nov 2026 (owner answers):** prototype runs on the Anthropic API
+  directly, EU endpoint before public launch; 10 free turns without an
+  account; "always" preferences apply in Opskrifter too. Remaining open:
+  proposal-card shape and meal history (below).
 - **Scope:** **Not part of v1.** Own milestone (M5) after the iOS release. Ships
   behind a server-side feature flag; v1 must not wait for it or depend on it.
 
@@ -44,11 +48,15 @@ behind the user's back.
 header and on the empty Plan state opens a full-screen chat sheet. The
 three-minute tap path stays the primary path.
 
-**5. Signed-in only, with limits.** The assistant needs an account (cost and
-abuse; anonymous parsing already uses the anonymous budget). Per-account daily
-turn limit (start: 30 turns/day, config), same global spend ledger and kill
-switch as import (overview §7). Offline: the button is shown dimmed with
-`Kræver forbindelse`.
+**5. A taste without an account, then sign-in, with limits** (owner, 13 Nov
+2026). Anonymous users get **10 turns per device in total** (config), counted
+on the server against the device id like anonymous parsing; the 11th turn
+shows the sign-in prompt as the reason to sign in. An anonymous user has no
+server-side data, so the client sends a **profile snapshot** (household size,
+personal staples, week, list) with each anonymous turn and the read tools
+answer from it. Signed-in: per-account daily turn limit (start: 30 turns/day,
+config). Both use the same global spend ledger and kill switch as import
+(overview §7). Offline: the button is shown dimmed with `Kræver forbindelse`.
 
 **6. Architecture.** `POST /api/assistant/turn` on the Django web service,
 streamed (SSE). The client sends only the recent messages (last ~20). Before a
@@ -84,11 +92,21 @@ tap. Everything is visible and editable under `⚙ → Det spiser vi`.
 staples. This adds `household_preferences` (one row per account: diets,
 avoid-ingredient ids, disliked recipe ids, kid-friendly default, weekday time
 cap, liked cuisines), synced like household servings, included in data export
-and account deletion. Avoid-ingredients are stored as plain "undgå" ingredient
+and account deletion. Each preference has a **strength**: `Altid` (always) or
+`Helst` (preferably). Avoid-ingredients are stored as plain "undgå" ingredient
 ids with **no reason recorded** (we never store "allergy"), which keeps health
 data out of the profile itself — the chat text can still contain it (see the
-privacy conflict below). Whether the Opskrifter tab also honours the profile
-(e.g. hide avoided ingredients by default) is an open question. No conversation is stored on the
+privacy conflict below).
+
+**The profile applies in Opskrifter too** (owner, 13 Nov 2026). `Altid`
+preferences are applied automatically as ordinary filter chips, already on
+(e.g. `Vegetar` for a household that always eats vegetarian; recipes with an
+avoided ingredient hidden), with a line `Filtreret efter jeres profil` and
+`Vis alle` so an empty or short result is explainable. `Helst` preferences
+appear first in the filter row but are off until tapped. The assistant follows
+the same rule: `Altid` is a hard filter, `Helst` is a ranking hint.
+
+No conversation is stored on the
 server; the phone keeps the current conversation until `Ryd ugen` or 7 days.
 Model and effort are config, chosen by an eval set (below), like the parser.
 
@@ -97,7 +115,7 @@ Model and effort are config, chosen by an eval set (below), like the parser.
 out-of-scope requests) with assertions on the tool calls, run in CI against a
 recorded transcript and nightly against the live model.
 
-## The conflict this creates — needs an owner decision
+## The privacy conflict — decided in two steps
 
 ADR 0009 says **"the LLM never receives personal data."** Chat text breaks
 that. People will type names, guests, and above all **allergies and diets**,
@@ -105,12 +123,19 @@ which can be health data (GDPR art. 9). Options:
 
 - **(a) EU-hosted model endpoint** — run the same Claude models through an EU
   cloud region (for example AWS Bedrock in Frankfurt) under that provider's
-  DPA. Keeps ADR 0009's "EU processors only". Recommended.
+  DPA. Keeps ADR 0009's "EU processors only".
 - **(b) Anthropic API directly** with a DPA and an international-transfer
   basis. Simpler, one provider for import and assistant; needs the legal check
   to accept a non-EU processor for chat content.
 - **(c) Strip before sending** — client-side redaction of names/emails. Doesn't
   catch allergies; not sufficient alone.
+
+**Decision (owner, 13 Nov 2026):** the prototype and internal/family testing
+run on **(b), the Anthropic API directly**. Before the assistant is offered to
+the public it moves to **(a), an EU-hosted endpoint**; that move is a launch
+gate for the feature flag (bead `umami-v3-s0c.9`). The model client sits behind
+one provider interface so the switch is config, not code. ADR 0009 gets a
+scoped exception for the prototype phase.
 
 Whatever is chosen: no chat content in logs, Sentry or telemetry (only counts:
 turns, proposals shown/applied); a one-line notice in the chat sheet; the
@@ -127,12 +152,18 @@ legal check (ADR 0017, bead `15a.3`) is extended to cover it.
 
 ## Open questions
 
-1. Privacy route (a)/(b) above.
-2. Should a proposal be able to *both* change the week and add list items in
-   one card, or one kind per card?
-3. Does the Opskrifter tab also apply the profile (hide avoided ingredients,
-   pre-select time cap), or is the profile assistant-only at first?
-4. "Not the same as last week" needs meal history; v1 keeps one open-ended
-   week and no history. Store the last few weeks' recipe ids, or skip?
-5. Is "signed-in only" right, or should anonymous users get a small taste
-   (e.g. 3 turns) as a sign-in reason?
+1. ~~Privacy route~~ — decided: (b) for the prototype, (a) before public launch.
+2. **Proposal-card shape.** A request like "fem retter til næste uge, og sæt
+   bleer på" changes the week *and* the list. One card with both (one
+   `Tilføj`, one undo), or two cards the user accepts separately?
+   Recommendation: one card per user request, with its parts listed, each
+   removable before `Tilføj`.
+3. ~~Opskrifter applies the profile~~ — decided: `Altid` applies, `Helst` is
+   offered (§6a).
+4. **Meal history.** The app has no calendar week, but it has a natural time
+   anchor: the **shopping trip**. Recommendation: when the user finishes
+   (`Så er der købt ind`), or runs `Ryd ugen` without a finished trip, record a
+   *trip* `{date, recipe ids, servings}`; keep the last 8. A
+   `get_recent_meals` tool answers "ikke det samme som sidst", and the record
+   is synced, exported and deleted like the week. Needs owner confirmation.
+5. ~~Anonymous taste~~ — decided: 10 turns per device.

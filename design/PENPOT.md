@@ -6,7 +6,8 @@ every conflict; raise disagreements as a bead, don't design around them.
 
 ## The file
 
-Penpot file **"Umami"** (id `51f2d744-23b9-8138-8008-f08eee9dd64f`), reached
+Penpot file **"Umami"** (id `51f2d744-23b9-8138-8008-f08eee9dd64f`,
+[open in Penpot](https://design.penpot.app/?screen=workspace&team-id=51f2d744-23b9-8138-8008-f0614142151e&file-id=51f2d744-23b9-8138-8008-f08eee9dd64f&page-id=51f2d744-23b9-8138-8008-f08eee9dd650)), reached
 through the Penpot MCP server; the owner must have the file open with the MCP
 plugin connected.
 
