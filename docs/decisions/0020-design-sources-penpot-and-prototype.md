@@ -13,7 +13,7 @@ Two design sources, each authoritative for one thing:
 
 | Source | Owns | Reviewed by |
 |---|---|---|
-| **Penpot** (team file "Umami v1") | Design tokens (colour, type, spacing, radii), the component library, static screen designs at 390 / 320 pt and standard / XL type, the assistant chat design | Comments in Penpot |
+| **Penpot** (file "Umami") | Design tokens (colour, type, spacing, radii), the component library, static screen designs at 390 / 320 pt and standard / XL type, the assistant chat design | Comments in Penpot |
 | **HTML prototype** `design/ui-draft/index.html` | Behaviour: flows, states, list-builder output, swipe actions, toasts, stale rules, copy in context | Paradev page comments |
 | **`docs/product/spec.md`** | The rules both must follow; wins any conflict | — |
 
